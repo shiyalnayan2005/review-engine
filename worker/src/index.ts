@@ -281,6 +281,55 @@ function serveAdminPanel(): Response {
         .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .review-body { max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .batch-input { width: 80px; padding: 8px; margin: 0 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .modal {
+          display: none;
+          position: fixed;
+          z-index: 999;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+          background: #fff;
+          margin: 5% auto;
+          padding: 20px;
+          width: 90%;
+          max-width: 700px;
+          border-radius: 10px;
+          position: relative;
+          max-height: 80vh;
+          overflow-y: auto;
+        }
+        
+        .modal-close {
+          position: absolute;
+          right: 15px;
+          top: 10px;
+          font-size: 24px;
+          cursor: pointer;
+        }
+        
+        .modal-content h2 {
+          margin-bottom: 15px;
+        }
+        
+        .modal-row {
+          margin-bottom: 10px;
+        }
+        
+        .modal-label {
+          font-weight: 600;
+          color: #555;
+        }
+        
+        .modal-text {
+          margin-top: 3px;
+          color: #222;
+          white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
@@ -394,6 +443,14 @@ function serveAdminPanel(): Response {
         </div>
     </div>
 
+    <div id="detailModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle">Details</h2>
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
     <script>
         let currentTab = 'products';
         let productsPage = 1;
@@ -437,7 +494,13 @@ function serveAdminPanel(): Response {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;">No products found</td></tr>';
             } else {
                 tbody.innerHTML = data.products.map(p => \`
-                    <tr>
+                  <tr onclick='openModal("Product Details", {
+                      "ASIN": "\${p.asin}",
+                      "Title": "\${(p.title || '').replace(/"/g, '&quot;')}",
+                      "Rating": "\${p.rating || '-'}",
+                      "Total Reviews": "\${p.total_reviews || 0}",
+                      "Created": "\${new Date(p.created_at).toLocaleString()}"
+                  })' style="cursor:pointer;">
                         <td><code>\${p.asin}</code></td>
                         <td>\${p.title || '-'}</td>
                         <td>\${p.rating || '-'}</td>
@@ -468,7 +531,16 @@ function serveAdminPanel(): Response {
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;">No reviews found</td></tr>';
             } else {
                 tbody.innerHTML = data.reviews.map(r => \`
-                    <tr>
+                  <tr onclick='openModal("Review Details", {
+                      "ID": "\${r.id}",
+                      "ASIN": "\${r.asin}",
+                      "Reviewer": "\${(r.reviewer_name || '').replace(/"/g, '&quot;')}",
+                      "Rating": "\${r.rating}★",
+                      "Original Review": "\${(r.body || '').replace(/"/g, '&quot;')}",
+                      "AI Review": "\${(r.ai_body || '').replace(/"/g, '&quot;')}",
+                      "Status": "\${r.ai_status}",
+                      "Created": "\${new Date(r.created_at).toLocaleString()}"
+                  })' style="cursor:pointer;">
                         <td>\${r.id}</td>
                         <td><code>\${r.asin}</code></td>
                         <td>\${r.reviewer_name || '-'}</td>
@@ -592,8 +664,32 @@ function serveAdminPanel(): Response {
         // Initial load
         refreshData();
         
-        // Auto-refresh stats every 10 seconds
-        //setInterval(loadStats, 10000);
+      function openModal(title, data) {
+        document.getElementById('modalTitle').textContent = title;
+    
+        let html = '';
+        for (const key in data) {
+          html += \`
+            <div class="modal-row">
+              <div class="modal-label">\${key}</div>
+              <div class="modal-text">\${data[key] || '-'}</div>
+            </div>
+          \`;
+        }
+    
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('detailModal').style.display = 'block';
+      }
+      
+      function closeModal() {
+        document.getElementById('detailModal').style.display = 'none';
+      }
+      
+      // Close on outside click
+      window.onclick = function(e) {
+        const modal = document.getElementById('detailModal');
+        if (e.target === modal) closeModal();
+      };
     </script>
 </body>
 </html>`;
