@@ -9,6 +9,7 @@ declare namespace Cloudflare {
 		review_db: D1Database;
 		SHOPIFY_STORE: string;
 		SHOPIFY_ACCESS_TOKEN: string;
+		GEMINI_API_KEY: string;
 	}
 }
 interface Env extends Cloudflare.Env {}
