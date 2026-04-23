@@ -5,33 +5,40 @@ export async function generateAIReview(env: Env, input: { title: string; body: s
 		.filter((w) => w.length > 3 && !['this', 'that', 'with', 'have', 'from', 'they', 'what', 'when'].includes(w))
 		.slice(0, 5);
 
-	const prompt = `Rewrite this product review as if a different person is describing the same experience.
+	const prompt = `You are rewriting a product review.
 
+    Your job is to produce a NEW version that sounds like a different person wrote it.
+    
     Original:
     "${input.body}"
     
-    Strict rules (must follow):
-    - Keep the SAME meaning and sentiment
+    MANDATORY RULES:
+    - Keep the same meaning and sentiment
     - Keep these keywords: ${keyNouns.join(', ')}
-    - Rating remains ${input.rating} stars
-    - DO NOT reuse full sentences or sentence structure
-    - DO NOT keep more than 4 consecutive words from the original
-    - Rewrite from scratch (not editing the original)
-    - Change wording heavily (70%+ different)
-    - Keep it short (1–2 sentences max)
-    - Use natural, casual human tone
-    - Avoid generic phrases like "This product is great"
-    - Vary sentence structure (combine, split, or reorder ideas)
+    - Rating: ${input.rating} stars
+    - DO NOT reuse sentence structure
+    - DO NOT reuse phrases longer than 3 words
+    - DO NOT start with similar wording
+    - DO NOT keep the same sentence order
+    - You MUST restructure the idea completely
     
-    Example transformation:
-    Original:
-    "This shelf is great. We bought it because we have baseboard heaters and needed something the right size that goes over the top."
+    STYLE:
+    - Casual, human, slightly imperfect
+    - Can merge ideas into 1 sentence or split differently
+    - Should feel like a quick personal comment
     
-    Good rewrite:
-    "Needed something to fit over our baseboard heater and this ended up working perfectly—size is just right."
+    LENGTH:
+    - More then one line than current lines count
     
-    Bad rewrite:
-    "This shelf is great. We bought it because we have baseboard heaters..."
+    CRITICAL:
+    If your output looks similar to the original, REWRITE it again completely before returning.
+    
+    Example:
+    Bad:
+    "This shelf is great. We bought it..."
+    
+    Good:
+    "Finding something to fit over our baseboard heater was tricky, but this ended up being the perfect size and works really well."
     
     Output ONLY the rewritten review.
   `;
